@@ -1,87 +1,49 @@
 # 🚀 EduPilot AI
 
-EduPilot AI is an **AI-powered Study Abroad Guidance Platform** built for **HACK2026**.  
-It helps students explore universities, understand eligibility, and generate personalized study abroad plans using AI.
-
-This project acts as a **virtual study abroad counselor** that guides students through their international education journey.
+EduPilot AI is an AI-powered **Study Abroad Guidance Platform** built for **HACK2026**.  
+It helps students find the right universities, analyze their academic profile, and receive personalized study abroad guidance using AI.
 
 ---
 
 ## 🌐 Live Demo
 
-🔗 [Click Here](https://edu-pilot-ai--aryan42006.replit.app)
-
----
-
-## 🎯 Problem Statement
-
-Many students struggle with:
-
-- Finding the right universities
-- Understanding admission requirements
-- Planning study abroad timelines
-- Identifying scholarship opportunities
-
-EduPilot AI simplifies this process using **AI-driven recommendations and personalized guidance**.
+🚀 **Try the application here:**  
+👉 [Launch EduPilot AI](https://edu-pilot-ai--aryan42006.replit.app)
 
 ---
 
 ## ✨ Features
 
-### 🤖 AI Chat Counselor
-Students can interact with an AI assistant to ask questions about studying abroad.
-
-### 👤 Student Profile Analysis
-Users enter their academic profile including:
-
-- CGPA (out of 10)
-- English test scores (IELTS / TOEFL / Duolingo)
-- Budget range
-- Preferred country
-- Field of study
-- Preferred intake
-
-The system then uses this information for personalized guidance.
-
-### 🎓 University Recommendations
-Based on the student profile, EduPilot AI suggests suitable universities.
-
-### 📅 Study Abroad Planning
-Students receive a personalized study abroad roadmap.
-
-### 💰 Scholarship Guidance
-The platform helps identify scholarship opportunities based on eligibility.
-
-### ⚡ Modern AI Interface
-A clean and responsive interface designed for easy interaction.
+- 🤖 AI Study Abroad Chatbot
+- 👤 Student Profile Analysis
+- 🎓 Personalized University Recommendations
+- 📅 Study Abroad Planning
+- 💰 Scholarship Guidance
+- ⚡ Modern AI Chat Interface
 
 ---
 
-## 🧠 How It Works
+## 🛠 Tech Stack
 
-1. The user completes their **student profile**
-2. EduPilot AI analyzes their academic details
-3. The AI chatbot generates personalized recommendations
-4. Students receive guidance on universities, timelines, and next steps
-
----
-
-## 🛠️ Tech Stack
-
-Frontend:
-- React / TypeScript
+Frontend
+- React
+- TypeScript
 - Tailwind CSS
 
-Backend:
+Backend
 - Node.js
 - Express
 
-AI Integration:
+AI
 - OpenAI / LLM APIs
 
-Deployment:
+Deployment
 - Replit
 
 ---
 
-## 🧩 Architecture
+## 🏆 Hackathon
+
+This project was developed as a **Minimum Viable Product (MVP)** for:
+
+**HACK2026 – AI Innovation Hackathon**
