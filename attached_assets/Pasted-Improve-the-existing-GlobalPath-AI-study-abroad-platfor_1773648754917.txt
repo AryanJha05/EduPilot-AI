@@ -1,0 +1,141 @@
+Improve the existing GlobalPath AI study abroad platform by adding a profile-gated chatbot flow.
+
+The chatbot should detect when a user asks for personalized guidance such as:
+"study abroad plan", "recommend universities", "my eligibility", or similar queries.
+
+Before giving personalized answers, the system must check whether the student profile exists.
+
+If the student profile is missing, the chatbot should respond with a message like:
+
+"I can create a personalized study abroad plan for you. Please complete your profile first."
+
+Below the message, display a button:
+
+"Complete Profile"
+
+When the user clicks the button, open a MODAL POP-UP FORM (not a new page or new tab).
+
+The popup should appear in the center of the screen with a dark transparent background overlay.
+
+---
+
+PROFILE FORM FIELDS
+
+The popup form should include the following fields:
+
+1. CGPA (out of 10)
+2. English Test Type (Dropdown)
+
+   * IELTS
+   * TOEFL
+   * Duolingo
+   * Not Taken
+3. English Test Score
+4. Budget (INR)
+5. Preferred Country (Dropdown)
+
+   * Canada
+   * USA
+   * UK
+   * Germany
+   * Australia
+6. Field of Study
+7. Preferred Intake
+
+   * Fall
+   * Spring
+
+---
+
+FORM DESIGN
+
+The modal form should follow the same modern UI style used in the website header.
+
+Design requirements:
+
+• rounded corners
+• clean card layout
+• soft shadow
+• gradient accent color
+• responsive design
+• smooth open/close animation
+
+Form layout:
+
+Title:
+"Student Profile"
+
+Subtitle:
+"Help us personalize your study abroad journey"
+
+Use modern input fields and dropdown selectors.
+
+Add two buttons at the bottom:
+
+Cancel
+Save Profile
+
+---
+
+PROFILE STORAGE
+
+When the user clicks "Save Profile":
+
+1. Validate inputs
+2. Save the data into a studentProfile object
+3. Store the profile in local storage so it persists during the session
+
+Example structure:
+
+studentProfile = {
+cgpa: 7.5,
+englishTest: "IELTS",
+englishScore: 6.5,
+budget: 2500000,
+country: "Canada",
+field: "Computer Science",
+intake: "Fall"
+}
+
+---
+
+CHATBOT BEHAVIOR
+
+After the profile is saved:
+
+• close the modal
+• show a confirmation message in the chat:
+
+"Thanks! Your profile has been saved. I can now create a personalized study abroad plan."
+
+Then allow the chatbot to generate recommendations using the stored studentProfile.
+
+---
+
+UI IMPROVEMENTS
+
+Also display a small profile summary card in the interface showing:
+
+CGPA
+English Score
+Preferred Country
+Budget
+
+---
+
+MVP BADGE
+
+Add a small floating badge at the bottom-right corner of the page that says:
+
+"MVP Prototype – Built for HACK2026"
+
+The badge should be subtle but visible and match the website design.
+
+---
+
+IMPORTANT
+
+• The form must open as a popup modal
+• It should not redirect the user to another page
+• The chatbot must check if a profile exists before giving personalized advice
+• Ensure smooth animations and modern UI

@@ -1,23 +1,43 @@
 import { useState } from 'react';
-import type { StudentProfile } from '@workspace/api-client-react';
+import type { ExtendedStudentProfile } from '@/hooks/use-profile';
 
 export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  action?: 'complete-profile';
 };
+
+const PROFILE_KEYWORDS = [
+  'study abroad plan', 'recommend', 'recommendation', 'universities', 'eligibility',
+  'eligible', 'personalized', 'plan for me', 'which university', 'best university',
+  'suggest', 'where should i', 'which country', 'my profile', 'my options', 'admit me',
+  'chances', 'guidance', 'counseling', 'advise'
+];
+
+export function isPersonalizedQuery(text: string) {
+  const lower = text.toLowerCase();
+  return PROFILE_KEYWORDS.some(kw => lower.includes(kw));
+}
 
 export function useChat(conversationId: number | null) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Hello! I'm your EduPilot AI counselor. I can help you find the best university matches abroad based on your profile. To get started, **what is your current CGPA (out of 10)?**"
+      content: "Hello! 👋 I'm your **EduPilot AI counselor**. I can help you find the best universities abroad based on your profile.\n\nYou can ask me anything about studying abroad, or ask for **personalized university recommendations** once you've set up your profile."
     }
   ]);
   const [isStreaming, setIsStreaming] = useState(false);
 
-  const sendMessage = async (content: string, profile?: Partial<StudentProfile>) => {
+  const addMessage = (msg: Message) => {
+    setMessages(prev => [...prev, msg]);
+  };
+
+  const sendMessage = async (
+    content: string,
+    profile?: ExtendedStudentProfile | null
+  ) => {
     if (!conversationId) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content };
@@ -27,14 +47,22 @@ export function useChat(conversationId: number | null) {
     const aiMsgId = (Date.now() + 1).toString();
     setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', content: '' }]);
 
+    // Build API-compatible profile (only send known API fields)
+    const apiProfile = profile ? {
+      cgpa: profile.cgpa,
+      englishTest: profile.englishTest === 'Not Taken' ? 'Not yet' : profile.englishTest,
+      englishScore: profile.englishScore ?? undefined,
+      budgetInr: profile.budgetInr,
+      country: profile.country,
+    } : null;
+
     try {
       const res = await fetch(`/api/openai/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          content, 
-          // Only send profile if it has at least one valid key to prevent type mismatch
-          studentProfile: profile && Object.keys(profile).length > 0 ? profile : null 
+        body: JSON.stringify({
+          content,
+          studentProfile: apiProfile
         })
       });
 
@@ -62,8 +90,8 @@ export function useChat(conversationId: number | null) {
                     m.id === aiMsgId ? { ...m, content: m.content + data.content } : m
                   ));
                 }
-              } catch (e) {
-                // Ignore parse errors on incomplete chunks
+              } catch {
+                // ignore parse errors on incomplete chunks
               }
             }
           }
@@ -71,15 +99,15 @@ export function useChat(conversationId: number | null) {
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        role: 'assistant', 
-        content: "I'm sorry, I encountered an error. Please try again." 
-      }]);
+      setMessages(prev => prev.map(m =>
+        m.id === aiMsgId
+          ? { ...m, content: "I'm sorry, I encountered an error. Please try again." }
+          : m
+      ));
     } finally {
       setIsStreaming(false);
     }
   };
 
-  return { messages, sendMessage, isStreaming };
+  return { messages, sendMessage, isStreaming, addMessage };
 }
