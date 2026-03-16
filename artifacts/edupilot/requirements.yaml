@@ -1,0 +1,15 @@
+packages:
+  "framer-motion": "For smooth chat and panel animations, and spring transitions"
+  "clsx": "Utility for conditionally joining classNames"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+  "lucide-react": "Beautiful consistent icons"
+  "react-markdown": "To safely render markdown from the OpenAI responses"
+
+images:
+  - path: "artifacts/edupilot/public/images/hero-bg.png"
+    description: "Soft blue and white abstract gradient mesh background, corporate, clean and modern"
+    aspect_ratio: "16:9"
+
+notes:
+  - "Assuming /api proxy is set up correctly for local dev"
+  - "The Chat uses SSE text/event-stream parsing directly via fetch API"

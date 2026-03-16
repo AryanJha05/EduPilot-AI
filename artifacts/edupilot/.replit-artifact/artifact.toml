@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "EduPilot AI"
+version = "1.0.0"
+id = "artifacts/edupilot"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 18164
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/edupilot run dev"
+
+[services.env]
+PORT = "18164"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/edupilot", "run", "build"]
+publicDir = "artifacts/edupilot/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

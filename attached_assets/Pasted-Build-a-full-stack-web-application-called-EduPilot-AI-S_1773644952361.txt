@@ -1,0 +1,82 @@
+Build a full-stack web application called **EduPilot AI – Study Abroad Guidance Chatbot**.
+
+The goal is to create a dynamic AI chatbot that helps Indian students who want to study abroad. The chatbot must give personalized recommendations based on student profiles and should not give the same answer every time.
+
+TECH STACK:
+
+* Frontend: React with Tailwind CSS
+* Backend: Node.js with Express
+* AI Integration: OpenAI or similar LLM API
+* Database: JSON or MongoDB to store university data
+
+GENERAL REQUIREMENTS:
+
+1. The chatbot must give dynamic responses based on the user’s question.
+2. The chatbot should ask structured questions like a counselor.
+3. The logic must assume CGPA is out of 10 because most users are Indian students.
+4. Prevent hallucinations by using predefined university data.
+5. Ensure a clean, modern UI suitable for a hackathon demo.
+
+CHATBOT CONVERSATION FLOW:
+When a user starts the chat, the chatbot should guide them step by step.
+
+Step 1: Ask the user's CGPA (out of 10).
+Step 2: Ask if they have taken an English test (IELTS, TOEFL, Duolingo, or Not yet).
+Step 3: Ask for their approximate study budget in INR (₹10–20L, ₹20–35L, ₹35–50L, ₹50L+).
+Step 4: Ask which country they want to study in (Canada, USA, UK, Germany, Australia).
+Step 5: Based on this information, generate personalized university recommendations.
+
+LOGIC REQUIREMENTS:
+
+* Validate CGPA input (must be between 0 and 10).
+* Convert CGPA to percentage using the formula:
+  Percentage = CGPA × 9.5
+* Use IELTS score filtering when recommending universities.
+* Show recommendation categories: Safe, Moderate, Ambitious.
+
+UNIVERSITY RECOMMENDATION ENGINE:
+Create a small dataset of universities including:
+
+* university name
+* country
+* minimum CGPA
+* minimum IELTS score
+* tuition estimate
+* deadline
+
+Filter universities based on the user's profile and return matches.
+
+CHATBOT RESPONSE STYLE:
+The chatbot should behave like a friendly study abroad counselor and provide clear, structured responses. If information is missing, it should ask follow-up questions.
+
+USER INTERFACE:
+Create a modern chat interface with:
+
+* Chat window
+* Message input box
+* Send button
+* Quick-select buttons for country options
+* Student profile summary panel
+
+UI DESIGN:
+
+* Clean modern layout
+* Primary color: blue
+* Responsive design
+* Smooth chat scrolling
+* Auto-scroll when new messages appear
+
+EXTRA FEATURES:
+
+1. Display a student profile summary (CGPA, IELTS, Budget, Country).
+2. Show recommended universities with match score.
+3. Display admission probability (Safe / Moderate / Ambitious).
+4. Allow the chatbot to ask follow-up questions.
+
+IMPORTANT:
+
+* The chatbot must generate different answers for different users.
+* Avoid static responses.
+* Use the AI model together with the university dataset for better accuracy.
+
+The final result should be a fully working dynamic chatbot web app suitable for a hackathon demo.
