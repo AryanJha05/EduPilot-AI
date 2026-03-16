@@ -1,0 +1,153 @@
+Improve the EduPilot AI study abroad chatbot application and fix several logic and UI issues.
+
+This project is a hackathon MVP for HACK2026 and should behave like a reliable AI advisor for students.
+
+---
+
+ISSUE 1 – PROFILE SYNCHRONIZATION
+
+Problem:
+The chatbot sometimes asks for CGPA or other profile information even though the student profile already exists and is visible on the interface.
+
+Required Fix:
+
+Before generating any chatbot response, always load the student profile from localStorage using the key "studentProfile".
+
+If the profile exists, the chatbot must include the profile information in the AI prompt and must NOT ask the user for CGPA, IELTS, or other profile details again.
+
+Instead the chatbot should acknowledge the stored profile with a message such as:
+
+"I see your profile is already set. How can I help you with your study abroad plans?"
+
+---
+
+ISSUE 2 – PROFILE GATE FOR PERSONALIZED QUESTIONS
+
+If a user asks for personalized advice such as:
+
+• study abroad plan
+• university recommendations
+• eligibility check
+• scholarship suggestions
+
+the chatbot must check if the student profile exists.
+
+If the profile does not exist:
+
+1. show a message:
+   "I can create a personalized study abroad plan for you. Please complete your profile first."
+
+2. show a button:
+   "Complete Profile"
+
+3. clicking the button should open the profile form in a popup modal (not a new page).
+
+---
+
+ISSUE 3 – PROFILE STORAGE
+
+When the profile form is submitted:
+
+Save the following information into localStorage using the key "studentProfile":
+
+• CGPA
+• English Test Type
+• English Test Score
+• Budget
+• Preferred Country
+• Field of Study
+• Preferred Intake
+
+Example structure:
+
+studentProfile = {
+cgpa: 7.5,
+englishTest: "IELTS",
+englishScore: 6.5,
+budget: "₹20–35L",
+country: "Canada",
+field: "Computer Science",
+intake: "Fall"
+}
+
+Ensure the chatbot always retrieves this profile before generating responses.
+
+---
+
+ISSUE 4 – CONVERSATION RESET
+
+The chatbot currently restarts the onboarding conversation even when the profile already exists.
+
+Fix this behavior.
+
+If a student profile exists:
+
+• skip onboarding questions
+• continue the conversation normally
+• do not ask for CGPA again.
+
+---
+
+ISSUE 5 – PROFILE CONTEXT IN AI PROMPT
+
+When generating responses, include the student profile in the AI prompt.
+
+Example prompt structure:
+
+Student Profile:
+CGPA: 7.5
+IELTS: 6.5
+Country: Canada
+Budget: ₹20–35L
+Field: Computer Science
+Intake: Fall
+
+User Question:
+[insert user message]
+
+This ensures personalized recommendations.
+
+---
+
+ISSUE 6 – PROFILE INDICATOR
+
+Add a visible message in the chat when the profile is successfully loaded:
+
+"Profile Loaded ✓ Your AI advisor is now personalized."
+
+---
+
+ISSUE 7 – MVP BADGE
+
+Add a floating badge to the website.
+
+Text:
+
+"MVP Prototype – Built for HACK2026"
+
+Requirements:
+
+• position: bottom-right corner
+• fixed while scrolling
+• modern rounded badge
+• subtle gradient or glow
+• must not block chat input.
+
+---
+
+ISSUE 8 – STABILITY IMPROVEMENTS
+
+Ensure the chatbot always:
+
+1. loads the student profile on page load
+2. keeps conversation state
+3. does not reset profile data during the session
+4. uses the profile consistently for recommendations.
+
+---
+
+GOAL
+
+The EduPilot AI chatbot should behave like a smart study abroad advisor that remembers the student's profile and provides personalized guidance.
+
+The final system must be stable, context-aware, and suitable for a hackathon MVP demonstration.

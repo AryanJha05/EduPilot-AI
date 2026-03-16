@@ -11,21 +11,20 @@ import { ProfilePanel } from '@/components/profile/ProfilePanel';
 import { ProfileModal } from '@/components/profile/ProfileModal';
 import { UniversityCard } from '@/components/recommendations/UniversityCard';
 
-const QUICK_OPTIONS = {
-  englishTest: ["IELTS", "TOEFL", "Duolingo", "Not Taken"],
-  budgetInr: ["10-20L", "20-35L", "35-50L", "50L+"],
-  country: ["Canada", "USA", "UK", "Germany", "Australia"]
-};
-
 export default function Home() {
-  const [conversationId, setConversationId] = useState<number | null>(null);
-  const { messages, sendMessage, isStreaming, addMessage } = useChat(conversationId);
+  // Load profile FIRST (synchronous from localStorage) so useChat can use it
   const { profile, saveProfile, hasProfile } = useProfile();
+
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  // Pass profile to useChat so initial welcome/messages are profile-aware
+  const { messages, sendMessage, isStreaming, addMessage } = useChat(conversationId, profile);
+
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showRecommendations, setShowRecommendations] = useState(false);
+  // Auto-show recommendations if profile already exists on load
+  const [showRecommendations, setShowRecommendations] = useState(hasProfile);
   const [pendingMessageAfterProfile, setPendingMessageAfterProfile] = useState<string | null>(null);
 
   const { mutateAsync: createConversation } = useCreateOpenaiConversation();
@@ -47,7 +46,7 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isStreaming]);
 
-  // Fetch recs when profile is complete and recommendations requested
+  // Fetch university recommendations whenever profile + showRecommendations
   useEffect(() => {
     if (showRecommendations && profile) {
       fetchRecs({
@@ -71,12 +70,12 @@ export default function Home() {
     addMessage({
       id: `profile-saved-${Date.now()}`,
       role: 'assistant',
-      content: `✅ **Profile saved!** Here's a quick summary:\n\n• **CGPA:** ${newProfile.cgpa}/10 (${(newProfile.cgpa * 9.5).toFixed(1)}%)\n• **English Test:** ${newProfile.englishTest}${newProfile.englishScore ? ` – ${newProfile.englishScore}` : ''}\n• **Budget:** ₹${newProfile.budgetInr}\n• **Country:** ${newProfile.country}\n• **Field:** ${newProfile.field}\n• **Intake:** ${newProfile.intake}\n\nI can now create a **personalized study abroad plan** for you! Ask me for university recommendations, or I'll start automatically.`
+      content: `✅ **Profile saved!** Here's a quick summary:\n\n• **CGPA:** ${newProfile.cgpa}/10 (${(newProfile.cgpa * 9.5).toFixed(1)}%)\n• **English Test:** ${newProfile.englishTest}${newProfile.englishScore ? ` — ${newProfile.englishScore}` : ''}\n• **Budget:** ₹${newProfile.budgetInr}\n• **Country:** ${newProfile.country}\n• **Field:** ${newProfile.field}\n• **Intake:** ${newProfile.intake}\n\n✅ **Profile Loaded** — Your AI advisor is now personalized. I won't ask for these details again.`
     });
 
     setShowRecommendations(true);
 
-    // If user had a pending message before profile was complete, send it now
+    // Send any pending message now that profile is ready
     if (pendingMessageAfterProfile) {
       const msg = pendingMessageAfterProfile;
       setPendingMessageAfterProfile(null);
@@ -88,13 +87,10 @@ export default function Home() {
     if (!content.trim() || isStreaming) return;
     setInputValue('');
 
-    // Check if user wants personalized guidance but profile is missing
+    // Gate personalized queries behind profile completion
     if (isPersonalizedQuery(content) && !hasProfile) {
-      // Show the user's message in chat
       addMessage({ id: `user-${Date.now()}`, role: 'user', content });
-      // Remember what they wanted so we can fulfill after profile is saved
       setPendingMessageAfterProfile(content);
-      // Show the profile-gate response with button
       addMessage({
         id: `gate-${Date.now()}`,
         role: 'assistant',
@@ -106,15 +102,12 @@ export default function Home() {
 
     await sendMessage(content, profile);
 
-    // If message mentions recommendations and profile is complete, show recs panel
     if (hasProfile && isPersonalizedQuery(content) && !showRecommendations) {
       setShowRecommendations(true);
     }
   };
 
-  const handleQuickSelect = (value: string) => {
-    handleSend(value);
-  };
+  const handleQuickSelect = (value: string) => handleSend(value);
 
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans">
@@ -127,20 +120,20 @@ export default function Home() {
         initialProfile={profile ?? undefined}
       />
 
-      {/* LEFT: CHAT */}
-      <div className="flex flex-col w-full lg:w-[60%] h-full relative z-10 bg-[url('/images/hero-bg.png')] bg-cover bg-center">
+      {/* LEFT: CHAT PANEL */}
+      <div className="flex flex-col w-full lg:w-[60%] h-full relative z-10">
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-[-1]" />
 
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-white/50 backdrop-blur-md shadow-sm z-20">
+        <header className="h-16 flex items-center justify-between px-6 border-b border-border/50 bg-white/60 backdrop-blur-md shadow-sm z-20">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-md">
-              <Sparkles className="w-4.5 h-4.5 text-white" />
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
               <h1 className="font-bold text-lg leading-none text-foreground">EduPilot AI</h1>
-              <p className="text-xs text-emerald-600 font-medium flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+              <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Online
               </p>
             </div>
@@ -178,8 +171,8 @@ export default function Home() {
             <div className="flex w-full mt-4 max-w-3xl mx-auto px-4 justify-start">
               <div className="px-5 py-3 rounded-2xl bg-white border border-border shadow-sm flex items-center space-x-2">
                 <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
             </div>
           )}
@@ -188,16 +181,14 @@ export default function Home() {
 
         {/* Input area */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent pt-10 pb-6 px-4 z-20">
-          {/* Quick select for English test, budget, country */}
           {!hasProfile && (
             <QuickSelect
-              options={QUICK_OPTIONS.englishTest}
+              options={["IELTS", "TOEFL", "Duolingo", "Not Taken"]}
               onSelect={handleQuickSelect}
               disabled={isStreaming}
               label="Quick answers:"
             />
           )}
-
           <div className="max-w-3xl mx-auto mt-3 relative">
             <input
               type="text"
@@ -214,18 +205,18 @@ export default function Home() {
               onClick={() => handleSend(inputValue)}
               disabled={!inputValue.trim() || isStreaming || !conversationId}
               className="absolute right-2 top-2 bottom-2 aspect-square bg-gradient-to-br from-primary to-indigo-600 hover:opacity-90
-                disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl flex items-center justify-center
-                transition-all shadow-md active:scale-95 disabled:active:scale-100 disabled:from-slate-200 disabled:to-slate-200"
+                disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 text-white rounded-xl
+                flex items-center justify-center transition-all shadow-md active:scale-95 disabled:active:scale-100"
             >
-              <Send className="w-4.5 h-4.5 ml-0.5" />
+              <Send className="w-4 h-4 ml-0.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* RIGHT: PROFILE & RECS */}
+      {/* RIGHT: PROFILE + RECOMMENDATIONS PANEL */}
       <AnimatePresence>
-        {(isMobileProfileOpen || typeof window !== 'undefined' && window.innerWidth >= 1024) && (
+        {(isMobileProfileOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -304,16 +295,16 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* MVP BADGE */}
+      {/* MVP BADGE — fixed bottom-right, never blocks input */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2, duration: 0.5 }}
-        className="fixed bottom-5 right-5 z-40 lg:bottom-6 lg:right-6"
+        className="fixed bottom-5 left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:right-6 lg:bottom-6 z-40 pointer-events-none"
       >
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md text-white text-xs font-medium shadow-lg border border-white/10">
+        <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900/85 backdrop-blur-md text-white text-xs font-medium shadow-xl border border-white/10">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          MVP Prototype – Built for HACK2026
+          MVP Prototype — Built for HACK2026
         </div>
       </motion.div>
 

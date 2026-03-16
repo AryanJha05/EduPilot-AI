@@ -14,30 +14,35 @@ import { universities, budgetRanges } from "../../data/universities";
 
 const router: IRouter = Router();
 
-const SYSTEM_PROMPT = `You are EduPilot AI, a friendly and expert study abroad counselor helping Indian students find the right university. 
+const BASE_SYSTEM_PROMPT = `You are EduPilot AI, a friendly and expert study abroad counselor helping Indian students find the right university abroad.
 
-You guide students through a structured consultation:
-1. First ask for their CGPA (out of 10)
-2. Ask about English proficiency test (IELTS, TOEFL, Duolingo, or Not yet)
-3. Ask for their study budget in INR (options: ₹10-20 Lakhs, ₹20-35 Lakhs, ₹35-50 Lakhs, or ₹50 Lakhs+)
+General knowledge rules:
+- CGPA for Indian students is always out of 10. Percentage = CGPA × 9.5
+- Be encouraging and supportive, keep responses concise and well-formatted
+- Use Safe / Moderate / Ambitious categories when recommending universities
+- Germany is the most affordable (₹3–5 Lakhs/year, nearly free public universities)
+- UK programs are typically 1 year, saving accommodation costs
+- Australia and Canada have post-study work visa options
+- USA has the most research opportunities but higher costs
+- University data: Canada, USA, UK, Germany, Australia — minimum CGPA 6.0–9.0, IELTS 5.5–7.5`;
+
+const NO_PROFILE_PROMPT = `
+
+Since the student has NOT provided a profile yet, guide them step by step:
+1. Ask for their CGPA (out of 10)
+2. Ask about English test (IELTS, TOEFL, Duolingo, or Not yet)
+3. Ask for study budget in INR (₹10–20L / ₹20–35L / ₹35–50L / ₹50L+)
 4. Ask which country they prefer (Canada, USA, UK, Germany, Australia)
-5. After collecting all info, provide personalized recommendations based on the university database
+5. After all 4 answers, provide recommendations with Safe/Moderate/Ambitious categories
+Ask one question at a time.`;
 
-Important rules:
-- CGPA is always out of 10 for Indian students. Convert to percentage using: Percentage = CGPA × 9.5
-- Be encouraging and supportive
-- Ask one question at a time
-- If user provides CGPA, validate it's between 0-10
-- When recommending universities, mention Safe/Moderate/Ambitious categories
-- After gathering all 4 pieces of info, summarize the profile and say you're generating recommendations
-- Keep responses concise and friendly
-- When the user mentions their CGPA, English test, budget, and country, extract those values clearly in your response
+const PROFILE_SYSTEM_PROMPT = `
 
-University data context: We have universities in Canada, USA, UK, Germany, and Australia with minimum CGPA requirements from 6.0 to 9.0 and IELTS requirements from 5.5 to 7.5.
-Germany is the most affordable (₹3-5 Lakhs/year, nearly free public universities).
-UK programs are typically 1 year, saving accommodation costs.
-Australia and Canada have post-study work visa options.
-USA has the most research opportunities but higher costs.`;
+IMPORTANT: The student's profile is ALREADY COMPLETE and is shown below.
+- Do NOT ask for CGPA, English score, budget, country, field, or intake again
+- Use the profile below to answer every question with personalized context
+- Acknowledge the stored profile when relevant, e.g. "Based on your CGPA of X..."
+- If asked for recommendations, provide specific Safe / Moderate / Ambitious universities using the eligible list provided`;
 
 router.get("/openai/conversations", async (_req, res) => {
   const convs = await db
@@ -145,13 +150,21 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     content: body.data.content,
   });
 
+  // Read extended fields from raw body (field, intake are not in the Zod schema)
+  const rawStudentProfile = req.body?.studentProfile as Record<string, unknown> | undefined;
   const studentProfile = body.data.studentProfile;
+  const extendedField: string | undefined = rawStudentProfile?.field as string | undefined;
+  const extendedIntake: string | undefined = rawStudentProfile?.intake as string | undefined;
+
+  let systemPrompt = BASE_SYSTEM_PROMPT;
   let profileContext = "";
+
   if (studentProfile) {
     const { cgpa, englishTest, englishScore, budgetInr, country } = studentProfile;
-    const percentage = cgpa * 9.5;
+    const percentage = (cgpa * 9.5).toFixed(1);
     const budget = budgetRanges[budgetInr];
 
+    // Find eligible universities for this profile
     const countryUnivs = universities.filter(
       (u) => u.country.toLowerCase() === country.toLowerCase()
     );
@@ -160,20 +173,33 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
       const budgetOk = !budget || u.tuitionEstimateInr <= budget.max;
       return cgpaOk && budgetOk;
     });
+    const safe = eligible.filter(u => u.minCgpa <= cgpa - 0.5).map(u => u.name);
+    const moderate = eligible.filter(u => u.minCgpa > cgpa - 0.5 && u.minCgpa <= cgpa + 0.5).map(u => u.name);
+    const ambitious = eligible.filter(u => u.minCgpa > cgpa + 0.5).map(u => u.name);
 
-    profileContext = `\n\nCurrent student profile:
-- CGPA: ${cgpa}/10 (${percentage.toFixed(1)}% equivalent)
-- English Test: ${englishTest}${englishScore ? ` (Score: ${englishScore})` : ""}
-- Budget: ₹${budgetInr}
-- Preferred Country: ${country}
-- Eligible universities count in ${country}: ${eligible.length}
-- Example eligible universities: ${eligible.slice(0, 3).map(u => u.name).join(", ")}
+    profileContext = `
 
-Based on this profile, please provide specific university recommendations with Safe/Moderate/Ambitious categorization.`;
+===== STUDENT PROFILE (ALREADY SAVED — DO NOT ASK FOR THESE AGAIN) =====
+CGPA: ${cgpa}/10 (${percentage}% equivalent)
+English Test: ${englishTest}${englishScore ? ` — Score: ${englishScore}` : " — Not yet taken"}
+Budget: ₹${budgetInr}
+Preferred Country: ${country}
+Field of Study: ${extendedField || "Not specified"}
+Preferred Intake: ${extendedIntake || "Not specified"}
+
+Eligible universities in ${country} (${eligible.length} found):
+  ✅ Safe options: ${safe.length > 0 ? safe.join(", ") : "None (consider raising CGPA or budget)"}
+  ⚖️ Moderate options: ${moderate.length > 0 ? moderate.join(", ") : "None"}
+  🚀 Ambitious options: ${ambitious.length > 0 ? ambitious.join(", ") : "None"}
+========================================================================`;
+
+    systemPrompt = BASE_SYSTEM_PROMPT + PROFILE_SYSTEM_PROMPT + profileContext;
+  } else {
+    systemPrompt = BASE_SYSTEM_PROMPT + NO_PROFILE_PROMPT;
   }
 
   const chatMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
-    { role: "system", content: SYSTEM_PROMPT + profileContext },
+    { role: "system", content: systemPrompt },
     ...existingMessages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,

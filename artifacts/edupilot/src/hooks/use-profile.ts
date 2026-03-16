@@ -10,7 +10,7 @@ export interface ExtendedStudentProfile {
   intake: 'Fall' | 'Spring';
 }
 
-const STORAGE_KEY = 'edupilot_student_profile';
+export const STORAGE_KEY = 'studentProfile';
 
 function loadFromStorage(): ExtendedStudentProfile | null {
   try {
